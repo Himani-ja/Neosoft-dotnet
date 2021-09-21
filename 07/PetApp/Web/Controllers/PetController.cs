@@ -7,9 +7,11 @@ using Web.Models;
 using Data.Entities;
 using Data;
 using System.Net;
+using Cat = Data.Entities.Cat;
 
 namespace Web.Controllers
 {
+    [HandleError]
     public class PetController : Controller
     {
         CatRepository repo;
@@ -18,6 +20,7 @@ namespace Web.Controllers
             repo = new CatRepository(new PetModel());
         }
         // GET: Pet
+        [OutputCache(Duration =10,VaryByParam ="none")]
         public ActionResult Index()
         {
             var cats = repo.GetCats();
@@ -29,6 +32,12 @@ namespace Web.Controllers
             return View(data);
         }
         // GET:PetById
+        /// <summary>
+        /// Gets value from Route(URL) or the Query string
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        //[Authorize]
         public ActionResult GetCatById(int? id)
         {
             if (id == null)
@@ -42,7 +51,7 @@ namespace Web.Controllers
         [HttpGet]
         public ViewResult Create()
         {
-            ViewBag.CatType=new SelectList(repo.getCatType(),"Id","Name");
+            ViewBag.CatType = new SelectList(repo.getCatType(), "Id", "Name");
             ViewBag.FurType = new SelectList(repo.getFurType(), "Id", "Name");
             return View();
         }
@@ -63,7 +72,17 @@ namespace Web.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             var cat = repo.GetCatById(id);
             if (cat == null)
+            {
                 return HttpNotFound();
+            }
+            else
+            {
+                ViewBag.CatType = new SelectList(repo.getCatType(), "Id", "Name",cat.CatType);
+                TempData["CatType"] = cat.CatType;
+                ViewBag.FurType = new SelectList(repo.getFurType(), "Id", "Name", cat.FurType);
+                TempData["FurType"] = cat.FurType;
+                TempData["Dob"] = cat.Dob?.ToString("MM/dd/yyyy");
+            }
             return View(Mapper.MapCVM(cat));
         }
         [HttpPost]
@@ -71,7 +90,7 @@ namespace Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                repo.UpdateCat(cat.Id);
+                repo.UpdateCat(Mapper.Map(cat));
                 return RedirectToAction("Index");
             }
             return View(cat);

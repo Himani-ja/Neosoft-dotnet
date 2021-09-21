@@ -16,6 +16,7 @@ namespace Data
         public CatRepository(PetModel db)
         {
             this.db = db;
+            db.Configuration.ProxyCreationEnabled = false;
         }
         public void AddCat(Cat cat)
         {
@@ -25,7 +26,7 @@ namespace Data
 
         public void DeleteCat(int id)
         {
-            var cat=db.Cats.Find(id);
+            var cat = db.Cats.Find(id);
             if (cat != null)
             {
                 db.Cats.Remove(cat);
@@ -52,7 +53,7 @@ namespace Data
             }
             else
             {
-                throw new ArgumentException("Id cannot be less than 0");               
+                throw new ArgumentException("Id cannot be less than 0");
             }
         }
 
@@ -60,20 +61,25 @@ namespace Data
         {
             return db.Cats
                     .Include("Gender")
-                    .ToList();            
+                    .Include("catType1")
+                    .Include("FurType1")
+                    .ToList();
         }
 
-        public Cat UpdateCat(int? id)
+        public Cat UpdateCat(Cat cats)
         {
-            var cat = db.Cats.Find(id);
-            if (cat != null)
-            {
-                db.Entry(cat).State = EntityState.Modified;
-                Save();
-                return cat;
-            }
-            else
-                return cat;
+             Cat updatedCat = (from c in db.Cats
+                                  where c.Id == cats.Id
+                                  select c).FirstOrDefault();
+                updatedCat.Name = cats.Name;
+                updatedCat.Dob = cats.Dob;
+                updatedCat.legLength = cats.legLength;
+                updatedCat.ribcage = cats.ribcage;
+                updatedCat.GenderId = cats.GenderId;
+                updatedCat.CatType = cats.CatType;
+                updatedCat.FurType = cats.FurType;
+            Save();            
+            return cats;
         }
         public void Save()
         {
