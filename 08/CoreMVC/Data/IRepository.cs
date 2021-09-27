@@ -10,5 +10,10 @@ namespace Data
     public interface IRepository
     {
         IEnumerable<SuperHero> GetSuperHeroes();
+        SuperHero GetSuperHeroById(int id);
+        void Add(SuperHero superHero);
+        void Edit(SuperHero superhero);
+        void DeleteSuperHeroById(int id);
+        void AddSuperPower(SuperPower superPower);
     }
 }
